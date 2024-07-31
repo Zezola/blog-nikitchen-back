@@ -4,21 +4,19 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma.service';
 import * as bcrypt from 'bcrypt';
 
+const roundsOfHashing = 10;
 
 @Injectable()
 export class UsersService {
   constructor(private prismaService: PrismaService){}
 
   async create(createUserDto: CreateUserDto) {
-    const saltOrRounds = 10;
-    const password = createUserDto.password;
-    const hash = await bcrypt.hash(password, saltOrRounds);
-    const newUserDto: CreateUserDto = {
-      name: createUserDto.name, 
-      email: createUserDto.email,
-      password: hash
-    }
-    return this.prismaService.user.create({data: newUserDto});
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      roundsOfHashing
+    );
+    createUserDto.password = hashedPassword;
+    return this.prismaService.user.create({data: createUserDto});
   }
 
   findAll() {
@@ -35,21 +33,15 @@ export class UsersService {
 
   async update(id: number, updateUserDto: UpdateUserDto) {
     if (updateUserDto.password) {
-      const saltOrRounds = 10;
-      const password = updateUserDto.password;
-      const hash = await bcrypt.hash(password, saltOrRounds);
-      const newUpdateUserDTO: UpdateUserDto = {
-        password: hash
-      }
-      return this.prismaService.user.update({
-        where: {id},
-        data: newUpdateUserDTO
-      })
+      updateUserDto.password = await bcrypt.hash(
+        updateUserDto.password,
+        roundsOfHashing
+      )
     }
     return this.prismaService.user.update({
       where: {id},
       data: updateUserDto
-    });
+    })
   }
 
   remove(id: number) {

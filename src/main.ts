@@ -9,6 +9,7 @@ async function bootstrap() {
     .setTitle("Nikitchen API")
     .setDescription("API documentation for the backend of the Nikitchen blog")
     .setVersion("0.1")
+    .addBearerAuth()
     .build();
   
   const document = SwaggerModule.createDocument(app, config);
